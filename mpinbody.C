@@ -48,14 +48,12 @@ string names[] = { "sun", "mercury", "venus", "earth", "mars", "jupiter", "satur
 const int NP = sizeof(b)/sizeof(Body);
 
 Vector calc_accel(Body i, Body j);
+int output(int t, int h, int w, double buf[][]);
 
 // Print R boilerplate to define a data frame for coordinates,
 // then fill in the rows of the frame for each time step
 
 int main(int argc, char *argv[]) {
- 
-  Vector *b_pos; 
-
   if(myid==0){
     int nn = ( sizeof(names) / sizeof(string *) );
     for (int i = 0; i < nn; i++) {
@@ -65,57 +63,41 @@ int main(int argc, char *argv[]) {
     }
     cout << endl;
   }
-
   MPI_Init();
-    Vector accel;
-    int timestep count = 0;
-    int crnt_t = 0;
-    int crnt_t_cnt = 0;
-    int nxt_t_cnt = 0;
-    //MPI_scatter(b[myid].mass,b[myid].position());
-    //MPI_Receive
-      while(not the kill tag){
-        if(received vector time == crnt_t){
-          place vector in buffer[crnt_t][body position]
-          crnt_t_cnt++;
-        }
-        else if(received vector time == 1 - crnt_t){
-          place vector in buffer[1 - crnt_t][body position]
-          nxt_t_cnt++;
-        }
-        if(crnt_t_cnt==max buffer size){
-          crnt_t_cnt=next_t_cnt;
-          next_t_cnt=0;
-          crnt_t = 1 - crnt_t;
-          if(myid==0){
-            //print my position information
-            //print buffer
-            timestep count++
-            if(timestep count == MAX_TIMESTEP_COUNT){
-              //scatter kill tag
-              //send kill tag to myself?
-            }
-          } 
-          for(int i = 0; i < max buffer size; i++){
-            accel += calc_accel(b[myid],<received body info>);
-          }
-          Vector newVeloc = b[myid].velocity() += accel * DT;
-          Vector newPosit = b[myid].position() += newVeloc * DT;
-          b[myid].setVelocity(newVeloc);
-          b[myid].setPosition(newPosit);
-          //MPI_Scatter
-        }
-        //MPI_Receive()  
+  double rec_buffer[NP][4];
+  for(int t = 0; t < MAX_TIMESTEP; t++){
+    MPI_Allgather(b[myid].message(),4,MPI_DOUBLE,&rec_buffer,NP*4,MPI_DOUBLE,MPI_COMM_WORLD);
+    if(myid==0){
+      output(t,NP,3,rec_buffer); //put mass last in the message
+    }
+    Vector accel;   
+    for(int i = 0; i < NP; i++){
+      if(i != myid){
+        accel += calc_accel(b[myid],rec_buffer[i][0],rec_buffer[i][1],rec_buffer[i][2],rec_buffer[i][3]);
       }
-  if(myid==0){
-    //delete[] b_pos
+    }
+    Vector newVeloc = b[myid].velocity() += accel * DT;
+    Vector newPosit = b[myid].position() += newVeloc * DT;
+    b[myid].setVelocity(newVeloc);
+    b[myid].setPosition(newPosit);
   }
   return MPI_Finalize();
 }
 
-Vector calc_accel(Body i, Body j){ 
-  Vector k = i.position() - j.position();
+int output(int t, int h,int w,double buf[][]){
+  cout << t << " "
+  for(int i = 0; i < h; i++){
+    for(int j = 0; j < w; j++){
+      cout << buf[i][j] << " ";
+    }
+  }
+  cout << endl;
+}
+
+Vector calc_accel(Body i, double x,double y, double z, double jmass){
+  Vector j(x,y,z);
+  Vector k = i.position() - h;
   double l = (k * (k * k)).norm();
-  Vector m = (k * ((double) 1/l)) * -1 * G * j.mass();
+  Vector m = (k * ((double) 1/l)) * -1 * G * jmass;
   return m;
 }
