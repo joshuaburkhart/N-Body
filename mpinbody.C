@@ -57,7 +57,6 @@ int main(int argc, char *argv[]) {
   Vector *b_pos; 
 
   if(myid==0){
-    //malloc space for b_pos to hold body position information
     int nn = ( sizeof(names) / sizeof(string *) );
     for (int i = 0; i < nn; i++) {
       cout << names[i] + "x "; 
@@ -68,30 +67,48 @@ int main(int argc, char *argv[]) {
   }
 
   MPI_Init();
-  for (int t = 0; t < T; t++) {
-    if(myid==0){
-     //put my body information into b_pos
-    }
-    //scatter body information
-    //MPI_scatter(...);
-      Vector accel;
-      for(int j=0; j < NP - 1; j++){ //collect scattered info from other bodies
-        //MPI_Receive(...);
-        if(myid==0){
-          //put received body information in b_pos
+    Vector accel;
+    int timestep count = 0;
+    int crnt_t = 0;
+    int crnt_t_cnt = 0;
+    int nxt_t_cnt = 0;
+    //MPI_scatter(b[myid].mass,b[myid].position());
+    //MPI_Receive
+      while(not the kill tag){
+        if(received vector time == crnt_t){
+          place vector in buffer[crnt_t][body position]
+          crnt_t_cnt++;
         }
-        accel += calc_accel(b[myid],<received body info>);
-      }      
-      Vector newVeloc = b[myid].velocity() += accel * DT;
-      Vector newPosit = b[myid].position() += newVeloc * DT;
-      b[myid].setVelocity(newVeloc);
-      b[myid].setPosition(newPosit);
-      if(myid==0){
-        //print b_pos
+        else if(received vector time == 1 - crnt_t){
+          place vector in buffer[1 - crnt_t][body position]
+          nxt_t_cnt++;
+        }
+        if(crnt_t_cnt==max buffer size){
+          crnt_t_cnt=next_t_cnt;
+          next_t_cnt=0;
+          crnt_t = 1 - crnt_t;
+          if(myid==0){
+            //print my position information
+            //print buffer
+            timestep count++
+            if(timestep count == MAX_TIMESTEP_COUNT){
+              //scatter kill tag
+              //send kill tag to myself?
+            }
+          } 
+          for(int i = 0; i < max buffer size; i++){
+            accel += calc_accel(b[myid],<received body info>);
+          }
+          Vector newVeloc = b[myid].velocity() += accel * DT;
+          Vector newPosit = b[myid].position() += newVeloc * DT;
+          b[myid].setVelocity(newVeloc);
+          b[myid].setPosition(newPosit);
+          //MPI_Scatter
+        }
+        //MPI_Receive()  
       }
-  }
   if(myid==0){
-    //free the space in b_pos
+    //delete[] b_pos
   }
   return MPI_Finalize();
 }
