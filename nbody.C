@@ -1,78 +1,73 @@
-#include "Body.h"
+/*
+   N-body simulation, using particle-particle (PP) method.
+   
+   ** Distributed version -- add code to main() to compute
+   ** interactions between bodies
+
+   To verify the method, this program uses 10 bodies with masses
+   of the sun and 9 planets.  The initial conditions were determined
+   by downloading positions and velocities as of Jan 1, 1970 from the
+   Solar System Database at JPL.
+
+   John Conery
+   CIS 455/555
+   
+   Updated Winter 2012 -- Use actual locations of planets (from JPL),
+   print data in a format that can be read as an R frame object
+*/
+
 #include <iostream>
-#include <cmath>
-using namespace std;
+using std::cout;
+using std::endl;
 
-#define N 10
-#define TIME_STEPS 10
-#define DELTA_T 1
+#include <string>
+using std::string;
 
-Vector calc_accel(Body i, Body j);
+#include "Vector.h"
+#include "Body.h"
 
-const double G = 6.67E-11;
+const int DT = 86459;     // time step = number of seconds in one day
+const int T = 365;        // number of time steps to execute
 
-double coords[][3]= {{0.0,9.0,8.2},
-  {2.0,8.0,6.2},
-  {3.0,7.0,2.2},
-  {4.0,6.0,2.2},
-  {5.0,5.0,3.2},
-  {6.0,4.0,4.2},
-  {7.0,3.0,5.2},
-  {8.0,2.0,6.2},
-  {9.0,1.0,7.2},
-  {10.0,1.0,9.2}};
+Body b[] = {
+  /* sun */      Body( 1.9891E+30, Vector(0, 0, 0), Vector(0, 0, 0 ) ),
+  /* mercury */  Body( 3.302E+23, Vector(3.83713E+10, 2.877025E+10, -1.175808E+09), Vector(-38787.67, 41093.05, 6918.461) ),
+  /* venus */    Body( 4.8685E+24, Vector(-5.377313E+09, -1.085956E+11, -1.164748E+09), Vector(34741.48, -1865.747, -2031.506) ),
+  /* earth */    Body( 5.9736E+24, Vector(-2.700743E+10, 1.446007E+11, 9686451), Vector(-29770.44, -5568.042, 0.3961261) ),
+  /* mars */     Body( 6.4185E+23, Vector(1.983825E+11, 7.422924E+10, -3.334841E+09), Vector(-7557.626, 24761.27, 704.7457) ),
+  /* jupiter */  Body( 1.89813E+27, Vector(-7.496502E+11, -3.201711E+11, 1.811155E+10), Vector(4982.522, -11417.83, -64.66531) ),
+  /* saturn */   Body( 5.68319E+26, Vector(1.082806E+12, 8.510841E+11, -5.793461E+10), Vector(-6487.118, 7565.952, 125.4422) ),
+  /* uranus */   Body( 8.68103E+25, Vector(-2.724616E+12, -2.894003E+11, 3.428801E+10), Vector(671.3469, -7099.093, -35.04028) ),
+  /* neptune */  Body( 1.0241E+26, Vector(-2.328072E+12, -3.891086E+12, 1.337436E+11), Vector(4633.961, -2767.423, -49.57268) ),
+  /* pluto */    Body( 1.314E+22, Vector(-4.551135E+12, 3.175277E+11, 1.282177E+12), Vector(635.998, -5762.115, 440.8821) )
+};
 
-double veloc[][3]= {{0.0,9.0,3.2},
-  {2.0,8.0,5.2},
-  {3.0,7.0,1.2},
-  {4.0,6.0,7.2},
-  {5.0,5.0,8.2},
-  {6.0,4.0,9.2},
-  {7.0,3.0,0.2},
-  {8.0,2.0,1.2},
-  {9.0,1.0,2.2},
-  {10.0,1.0,1.2}};
+string names[] = { "sun", "mercury", "venus", "earth", "mars", "jupiter", "saturn", "uranus", "neptune", "pluto" };
 
-int main(int argc, int argv[]){
+const int NP = sizeof(b)/sizeof(Body);
 
-Vector position[N];
-Vector velocity[N];
-Body system[N];
+// Print R boilerplate to define a data frame for coordinates,
+// then fill in the rows of the frame for each time step
 
-for(int i=0; i < N; i++){
-  position[i] = Vector(coords[i][0],coords[i][1],coords[i][2]);
-  velocity[i] = Vector(veloc[i][0],veloc[i][1],veloc[i][2]);
-  system[i] = Body((double) (3*i+i),position[i],velocity[i]);
-}
+int main(int argc, char *argv[]) {
+  int nn = ( sizeof(names) / sizeof(string *) );
+  for (int i = 0; i < nn; i++) {
+    cout << names[i] + "x "; 
+    cout << names[i] + "y ";
+    cout << names[i] + "z ";
+  }
+  cout << endl;
 
-for(int t=0; t < TIME_STEPS; t++){
-  printf("time %i: ",t);
-  for(int i=0; i < N; i++){
-    printf("body %i ",i);
-    Vector accel[N];
-    for(int j=0; j < N; j++){
-      if(i != j){
-        accel[i] += calc_accel(system[i],system[j]);
-      }
-      //else continue
+  for (int t = 0; t < T; t++) {
+    
+    /* your code here -- update positions of bodies */
+
+    cout << t << " ";
+    for (int i = 0; i < NP; i++) {
+      cout << b[i] << " ";
     }
-    Vector newVeloc = system[i].velocity() += accel[i] * DELTA_T;
-    Vector newPosit = system[i].position() += newVeloc * DELTA_T;
-    system[i].setVelocity(newVeloc);
-    system[i].setPosition(newPosit);
-    cout << "(pos " << system[i].position() << ")";
-    cout << "(vel " << system[i].velocity() << ")" << endl;
+    cout << endl;
   }
 }
 
-return 0;
-}
 
-Vector calc_accel(Body i, Body j){
-
-Vector k = i.position() - j.position();
-double l = (k * (k * k)).norm();
-Vector m = (k * ((double) 1/l)) * -1 * G * j.mass();
-
-return m;
-}
