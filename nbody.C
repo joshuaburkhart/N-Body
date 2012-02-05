@@ -28,6 +28,7 @@ using std::string;
 
 const int DT = 86459;     // time step = number of seconds in one day
 const int T = 365;        // number of time steps to execute
+const double G = 6.67E-11;
 
 Body b[] = {
   /* sun */      Body( 1.9891E+30, Vector(0, 0, 0), Vector(0, 0, 0 ) ),
@@ -46,6 +47,8 @@ string names[] = { "sun", "mercury", "venus", "earth", "mars", "jupiter", "satur
 
 const int NP = sizeof(b)/sizeof(Body);
 
+Vector calc_accel(Body i, Body j);
+
 // Print R boilerplate to define a data frame for coordinates,
 // then fill in the rows of the frame for each time step
 
@@ -61,13 +64,31 @@ int main(int argc, char *argv[]) {
   for (int t = 0; t < T; t++) {
     
     /* your code here -- update positions of bodies */
-
+    for(int i=0; i < NP; i++){
+      Vector accel[NP];
+      for(int j=0; j < NP; j++){
+        if(i != j){ 
+          accel[i] += calc_accel(b[i],b[j]);
+        }   
+        //else continue
+      }   
+      Vector newVeloc = b[i].velocity() += accel[i] * DT;
+      Vector newPosit = b[i].position() += newVeloc * DT;
+      b[i].setVelocity(newVeloc);
+      b[i].setPosition(newPosit);
+    }
     cout << t << " ";
     for (int i = 0; i < NP; i++) {
       cout << b[i] << " ";
     }
     cout << endl;
   }
+return 0;
 }
 
-
+Vector calc_accel(Body i, Body j){ 
+  Vector k = i.position() - j.position();
+  double l = (k * (k * k)).norm();
+  Vector m = (k * ((double) 1/l)) * -1 * G * j.mass();
+return m;
+}
