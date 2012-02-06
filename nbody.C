@@ -62,6 +62,11 @@ int main(int argc, char *argv[]) {
   cout << endl;
 
   for (int t = 0; t < T; t++) {
+    cout << t << " ";
+    for (int i = 0; i < NP; i++) {
+      cout << b[i] << " ";
+    }
+    cout << endl;
     
     /* your code here -- update positions of bodies */
     for(int i=0; i < NP; i++){
@@ -77,12 +82,7 @@ int main(int argc, char *argv[]) {
       b[i].setVelocity(newVeloc);
       b[i].setPosition(newPosit);
     }
-    cout << t << " ";
-    for (int i = 0; i < NP; i++) {
-      cout << b[i] << " ";
-    }
-    cout << endl;
-  }
+ }
 return 0;
 }
 

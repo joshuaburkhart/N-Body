@@ -72,6 +72,7 @@ int main(int argc, char *argv[]) {
   for(int t = 0; t < T; t++){
     double send_buffer[4];
     b[myid].message(send_buffer);
+    //printf("myid: %i, x: %f y: %f z: %f mass: %f\n",myid,send_buffer[0],send_buffer[1],send_buffer[2],send_buffer[3]);
     MPI_Allgather(send_buffer,4,MPI_DOUBLE,rec_buffer,4,MPI_DOUBLE,MPI_COMM_WORLD);
     if(myid==0){
       output(t,NP,3,rec_buffer); //put mass last in the message
@@ -94,7 +95,7 @@ int output(int t, int h,int w,double buf[]){
   cout << t << " ";
   for(int i = 0; i < h; i++){
     for(int j = 0; j < w; j++){
-      cout << buf[i*w+j] << " ";
+      cout << buf[i*4+j] << " ";
     }
   }
   cout << endl;
