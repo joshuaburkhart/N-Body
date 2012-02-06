@@ -42,6 +42,8 @@ public:
   void move(int dt);
   void makeMessage(body_message *m);
 
+  double* message(double o[]);
+
   // output operator
   friend ostream& operator<<(ostream& s, const Body& b);
 

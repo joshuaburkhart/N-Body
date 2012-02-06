@@ -47,6 +47,10 @@ public:
   // Dot product (vector * vector = scalar)
   friend double operator*(const Vector &v1, const Vector& v2);
 
+  double getX() {return x;}
+  double getY() {return y;}
+  double getZ() {return z;}
+
   // output operator
   friend ostream& operator<<(ostream& s, const Vector& v);
 

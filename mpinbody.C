@@ -25,6 +25,7 @@ using std::string;
 
 #include "Vector.h"
 #include "Body.h"
+#include <mpi.h>
 
 const int DT = 86459;     // time step = number of seconds in one day
 const int T = 365;        // number of time steps to execute
@@ -47,13 +48,17 @@ string names[] = { "sun", "mercury", "venus", "earth", "mars", "jupiter", "satur
 
 const int NP = sizeof(b)/sizeof(Body);
 
-Vector calc_accel(Body i, Body j);
-int output(int t, int h, int w, double buf[][]);
+Vector calc_accel(Body i, double x, double y, double z, double jmass);
+int output(int t, int h, int w, double buf[]);
 
-// Print R boilerplate to define a data frame for coordinates,
-// then fill in the rows of the frame for each time step
+int nprocs,myid;
 
 int main(int argc, char *argv[]) {
+  MPI_Init(&argc,&argv);
+  MPI_Comm_rank(MPI_COMM_WORLD, &myid);
+  MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+  MPI_Status s;
+
   if(myid==0){
     int nn = ( sizeof(names) / sizeof(string *) );
     for (int i = 0; i < nn; i++) {
@@ -63,17 +68,18 @@ int main(int argc, char *argv[]) {
     }
     cout << endl;
   }
-  MPI_Init();
-  double rec_buffer[NP][4];
-  for(int t = 0; t < MAX_TIMESTEP; t++){
-    MPI_Allgather(b[myid].message(),4,MPI_DOUBLE,&rec_buffer,NP*4,MPI_DOUBLE,MPI_COMM_WORLD);
+  double rec_buffer[NP*4];
+  for(int t = 0; t < T; t++){
+    double send_buffer[4];
+    b[myid].message(send_buffer);
+    MPI_Allgather(send_buffer,4,MPI_DOUBLE,rec_buffer,4,MPI_DOUBLE,MPI_COMM_WORLD);
     if(myid==0){
       output(t,NP,3,rec_buffer); //put mass last in the message
     }
     Vector accel;   
     for(int i = 0; i < NP; i++){
       if(i != myid){
-        accel += calc_accel(b[myid],rec_buffer[i][0],rec_buffer[i][1],rec_buffer[i][2],rec_buffer[i][3]);
+        accel += calc_accel(b[myid],rec_buffer[i*4+0],rec_buffer[i*4+1],rec_buffer[i*4+2],rec_buffer[i*4+3]);
       }
     }
     Vector newVeloc = b[myid].velocity() += accel * DT;
@@ -84,11 +90,11 @@ int main(int argc, char *argv[]) {
   return MPI_Finalize();
 }
 
-int output(int t, int h,int w,double buf[][]){
-  cout << t << " "
+int output(int t, int h,int w,double buf[]){
+  cout << t << " ";
   for(int i = 0; i < h; i++){
     for(int j = 0; j < w; j++){
-      cout << buf[i][j] << " ";
+      cout << buf[i*w+j] << " ";
     }
   }
   cout << endl;
@@ -96,7 +102,7 @@ int output(int t, int h,int w,double buf[][]){
 
 Vector calc_accel(Body i, double x,double y, double z, double jmass){
   Vector j(x,y,z);
-  Vector k = i.position() - h;
+  Vector k = i.position() - j;
   double l = (k * (k * k)).norm();
   Vector m = (k * ((double) 1/l)) * -1 * G * jmass;
   return m;

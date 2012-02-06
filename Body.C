@@ -109,6 +109,14 @@ void Body::makeMessage(body_message *m) {
 
 }
 
+double* Body::message(double o[]){
+  o[0]=_position.getX();
+  o[1]=_position.getY();
+  o[2]=_position.getZ();
+  o[3]=_mass;
+  return o;
+} 
+
 // Output operator 
 
 ostream& operator<<(ostream& s, const Body& b) {

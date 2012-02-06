@@ -7,8 +7,8 @@
 # Uncomment one of these lines to specify a compiler -- use g++
 # for the sequential program, mpic++ for parallel.
 
-CXX = g++
-# CXX = mpic++
+#CXX = g++
+ CXX = mpic++
 
 nbody:	nbody.o Vector.o Body.o
 	$(LINK.cc) -o nbody nbody.o Vector.o Body.o
