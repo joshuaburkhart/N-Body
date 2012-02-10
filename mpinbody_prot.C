@@ -98,7 +98,8 @@ printf("0");
   double *bod_array;
   int bod_idx=0;
   int line_number=0;
-  int row=myid,bod_count;
+  int row=myid;
+  int bod_count;
   string line;
   printf("1");
   ifstream input_data;
@@ -113,7 +114,7 @@ printf("0");
       printf("bod_count is %i!\n",bod_count);
     }
     bod_array = (double*) malloc(sizeof(double) * 7 * (bod_count/nprocs));
-    while(input_data.good() && row < bod_idx){
+    while(input_data.good() && row < bod_count/nprocs){
       getline(input_data,line);
       if(row==line_number){
         row+=nprocs;
