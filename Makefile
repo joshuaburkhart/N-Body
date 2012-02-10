@@ -16,6 +16,9 @@ nbody:	nbody.o Vector.o Body.o
 mpinbody:	mpinbody.o Vector.o Body.o
 	$(LINK.cc) -o mpinbody mpinbody.o Vector.o Body.o
 
+mpinbody_prot:  mpinbody_prot.o Vector.o Body.o
+	$(LINK.cc) -o mpinbody_prot mpinbody_prot.o Vector.o Body.o
+
 vdemo:	vdemo.o Vector.o
 	$(LINK.cc) -o vdemo vdemo.o Vector.o
 
