@@ -125,7 +125,7 @@ MPI_Init(&argc,&argv);
           start = end;
         }
         row+=nprocs;
-        bod_idx++; //does this end up as the number of bodies I'm holding?
+        bod_idx++;
       }
       line_number++;
     }
@@ -159,6 +159,16 @@ for(int i = 0; i<((4*bods_per_proc)+1); i++){
   printf("sendbuf %i is %f\n",i,*(sendbuf+i));
 }
 
+//for each timestep
+//
+//  do the allgather
+//
+//  iterate through and pull out values
+//
+//  recalculate coords for my bodies
+//
+//  rebuild send buffer 
+
 /*
   if(myid==0){
     int nn = ( sizeof(names) / sizeof(string *) );
@@ -190,6 +200,8 @@ for(int i = 0; i<((4*bods_per_proc)+1); i++){
     b[myid].setPosition(newPosit);
   }
 */
+  free(sendbuf);
+  free(recvbuf);
   free(bod_array);
   return MPI_Finalize();
 }
