@@ -24,6 +24,7 @@ using std::ifstream;
 using std::cout;
 using std::endl;
 
+
 #include <string>
 using std::string;
 
@@ -58,13 +59,11 @@ int output(int t, int h, int w, double buf[]);
 int nprocs,myid;
 
 int main(int argc, char *argv[]) {
-printf("-1");  
 
 MPI_Init(&argc,&argv);
   MPI_Comm_rank(MPI_COMM_WORLD, &myid);
   MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
   MPI_Status s;
-printf("0");
 
 //each thread reads from file... only the lines it needs
 /*
@@ -99,32 +98,67 @@ printf("0");
   int bod_idx=0;
   int line_number=0;
   int row=myid;
-  int bod_count;
+  int bod_count,bods_per_proc;
   string line;
-  printf("1");
   ifstream input_data;
   input_data.open("galaxy.dat");
-  printf("2");
   if(input_data.is_open()){
-    printf("3");
     if(input_data.good()){
-      printf("4");
-      getline(input_data,line);
       input_data >> bod_count;
+      bods_per_proc = bod_count/nprocs;
       printf("bod_count is %i!\n",bod_count);
+      printf("bods_per_proc is %i!\n",bods_per_proc);
     }
-    bod_array = (double*) malloc(sizeof(double) * 7 * (bod_count/nprocs));
-    while(input_data.good() && row < bod_count/nprocs){
+    bod_array = (double*) malloc(sizeof(double) * 7 * bods_per_proc);
+    getline(input_data,line);//moving to the first row of data
+    while(input_data.good() && row < bod_count){
       getline(input_data,line);
       if(row==line_number){
+        printf("I am thread %i at row %i, storing body %i\n",myid,row,bod_idx);
+        size_t start = 0;
+        size_t end = 0;
+        for(int j=0;j<7;j++){
+          end = line.find(" ",start+1);
+          double dub = atof(line.substr(start,end).c_str());
+          *(bod_array+(bod_idx*7)+j) = dub;
+          printf("start: %lu, end: %lu, just added measurement %f\n",start,end,dub);
+          start = end;
+        }
         row+=nprocs;
-        printf("I am thread %i, storing body %i\n",myid,bod_idx);
-        //*(bod_array+bod_idx) = fill_w_data(line);
-        bod_idx++;
+        bod_idx++; //does this end up as the number of bodies I'm holding?
       }
       line_number++;
     }
   }
+printf("Thread %i holding %i bodies\n",myid,bod_idx);
+for(int i = 0; i < bod_idx; i++){
+printf("bod %i mass: %f\n",i,*(bod_array+(i*7)+0));
+printf("bod %i x: %f\n",i,*(bod_array+(i*7)+1));
+printf("bod %i y: %f\n",i,*(bod_array+(i*7)+2));
+printf("bod %i z: %f\n",i,*(bod_array+(i*7)+3));
+printf("bod %i vx: %f\n",i,*(bod_array+(i*7)+4));
+printf("bod %i vy: %f\n",i,*(bod_array+(i*7)+5));
+printf("bod %i vz: %f\n",i,*(bod_array+(i*7)+6));
+}
+
+double *sendbuf,*recvbuf;
+sendbuf = (double*) malloc(sizeof(double) * ((4 * bods_per_proc) + 1));
+recvbuf = (double*) malloc(sizeof(double) * (((4 * bods_per_proc) + 1) * nprocs)); //different from bod_count!!
+
+*(sendbuf)= (double) bod_idx;
+for(int i = 0; i < bod_idx; i++){
+  *(sendbuf+(i*4)+1)=*(bod_array+(i*7)+0);
+  *(sendbuf+(i*4)+2)=*(bod_array+(i*7)+1);
+  *(sendbuf+(i*4)+3)=*(bod_array+(i*7)+2);
+  *(sendbuf+(i*4)+4)=*(bod_array+(i*7)+3);
+}
+
+printf("bod_idx is %i\n",bod_idx);
+
+for(int i = 0; i<((4*bods_per_proc)+1); i++){
+  printf("sendbuf %i is %f\n",i,*(sendbuf+i));
+}
+
 /*
   if(myid==0){
     int nn = ( sizeof(names) / sizeof(string *) );
