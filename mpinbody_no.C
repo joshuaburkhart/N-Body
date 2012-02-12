@@ -1,19 +1,10 @@
 /*
-   N-body simulation, using particle-particle (PP) method.
-   
-   ** Distributed version -- add code to main() to compute
-   ** interactions between bodies
-
-   To verify the method, this program uses 10 bodies with masses
-   of the sun and 9 planets.  The initial conditions were determined
-   by downloading positions and velocities as of Jan 1, 1970 from the
-   Solar System Database at JPL.
-
-   John Conery
+   Joshua Burkhart
+   2/13/2012
+   Dr. John Conery
    CIS 455/555
    
-   Updated Winter 2012 -- Use actual locations of planets (from JPL),
-   print data in a format that can be read as an R frame object
+   N-Body
 */
 
 #include <math.h>
@@ -27,12 +18,30 @@ using std::endl;
 using std::string;
 #include <mpi.h>
 
-const int DT = 86459;     // time step = number of seconds in one day
-const int T = 365;        // number of time steps to execute
-double G = 6.67E-11;
 int nprocs,myid;
 
 int main(int argc, char *argv[]) {
+  int DT = 86459;     // time step = number of seconds in one day
+  int T = 365;        // number of time steps to execute
+  double G = 6.67E-11;
+  const char *input_file;
+  input_file = "/home13/jburkhar/N-Body/solar_system.dat";
+  
+  for(int i=0;i<argc;i++){
+    if(0==strcmp(argv[i],"-DT")){
+      DT=atoi(argv[i+1]);
+    }   
+    else if(0==strcmp(argv[i],"-T")){
+      T=atoi(argv[i+1]);
+    }   
+    else if(0==strcmp(argv[i],"-G")){
+      G=atof(argv[i+1]);
+    }   
+    else if(0==strcmp(argv[i],"-f")){
+      input_file=argv[i+1];
+    }   
+  }
+
   MPI_Init(&argc,&argv);
   MPI_Comm_rank(MPI_COMM_WORLD, &myid);
   MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
@@ -44,10 +53,17 @@ int main(int argc, char *argv[]) {
   int total_bod_count,bods_per_proc,local_bod_count;
   string line;
   ifstream input_data;
-  input_data.open("/home13/jburkhar/N-Body/galaxy.dat");
+  input_data.open(input_file);
   if(input_data.is_open()){
     if(input_data.good()){
       input_data >> total_bod_count;
+      if(total_bod_count % nprocs != 0){
+        if(myid == 0){
+          cout << "The number of bodies must be divisible by the number of processes.\n" << endl;
+        }
+        MPI_Finalize();
+        return 1;
+      }
       bods_per_proc = total_bod_count/nprocs;
     }
     local_bod_array = (double*) malloc(sizeof(double) * 7 * bods_per_proc);
