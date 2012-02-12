@@ -159,19 +159,19 @@ for(int t=0;t<T;t++){
   MPI_Allgather(sendbuf,sendbuf_size,MPI_DOUBLE,recvbuf,sendbuf_size,MPI_DOUBLE,MPI_COMM_WORLD);
   
   //printf("Listing all bod counts\n");
-  for(int i=0; i<nprocs;i++){
-    int foreign_bod_count=(int)  *(recvbuf+(i * sendbuf_size));
-    //printf("sendbuf bod count %i is %f\n",i,foreign_bod_count);
-    for(int k = 0; k < local_bod_count; k++){
-      double local_x;
-      double local_y;
-      double local_z;
-      double local_vx;
-      double local_vy;
-      double local_vz;
-      double accel_x=0;
-      double accel_y=0;
-      double accel_z=0;
+  for(int k = 0; k < local_bod_count; k++){
+    double local_x;
+    double local_y;
+    double local_z;
+    double local_vx;
+    double local_vy;
+    double local_vz;
+    double accel_x=0;
+    double accel_y=0;
+    double accel_z=0;
+    for(int i=0; i<nprocs;i++){
+      int foreign_bod_count=(int)  *(recvbuf+(i * sendbuf_size));
+      //printf("sendbuf bod count %i is %f\n",i,foreign_bod_count);
       for(int j = 0; j < foreign_bod_count; j++){
         if(!(i == myid && j==k)){//skip bodies that are themselves
           double foreign_m = *(recvbuf+(i * sendbuf_size)+(4 * j)+1);
@@ -202,34 +202,35 @@ for(int t=0;t<T;t++){
           accel_x += tax;
           accel_y += tay;
           accel_z += taz;
-          //cout << "local coords: " << local_x << " " << local_y << " " << local_z << endl;
-          //cout << "foreign coords: " << foreign_x << " " << foreign_y << " " << foreign_z << endl;
-          //cout << "k is " << dx << " " << dy << " " << dz << endl;
-          //cout << "l is " << l << endl;
-          //cout << "m is " << tax << " " << tay << " " << taz << endl;
-          //printf("mass of foreign body %i and local body %i\n",j,k);          
-          //cout << foreign_m << endl << local_m << endl;          
-          //printf("accelleration vector from foreign body %i to local body %i is ",j,k);
-          //cout << accel_x << " " << accel_y << " " << accel_z << " " << endl;
+          /*cout << myid << "local coords: " << local_x << " " << local_y << " " << local_z << endl;
+          cout << myid << "foreign coords: " << foreign_x << " " << foreign_y << " " << foreign_z << endl;
+          cout << myid << "k is " << dx << " " << dy << " " << dz << endl;
+          cout << myid << "l is " << l << endl;
+          cout << myid << "m is " << tax << " " << tay << " " << taz << endl;
+          printf("%i mass of foreign body %i and local body %i\n",myid,j,k);          
+          cout << myid << foreign_m << endl << local_m << endl;          
+          printf("%i accelleration vector from foreign body %i to local body %i is ",myid,j,k);
+          cout << myid << accel_x << " " << accel_y << " " << accel_z << " " << endl;
+          */
         }   
       }
-      // Vector newVeloc = b[myid].velocity() += accel * DT;
-      double new_vx = local_vx += accel_x * DT;
-      double new_vy = local_vy += accel_y * DT;
-      double new_vz = local_vz += accel_z * DT;
-      // Vector newPosit = b[myid].position() += newVeloc * DT;
-      double new_x = local_x += new_vx * DT;
-      double new_y = local_y += new_vy * DT;         
-      double new_z = local_z += new_vz * DT;
-      // b[myid].setPosition(newPosit);
-      *(local_bod_array+(k*7)+1) = new_x;
-      *(local_bod_array+(k*7)+2) = new_y;
-      *(local_bod_array+(k*7)+3) = new_z;
-      // b[myid].setVelocity(newVeloc);
-      *(local_bod_array+(k*7)+4) = new_vx;
-      *(local_bod_array+(k*7)+5) = new_vy;
-      *(local_bod_array+(k*7)+6) = new_vz;
     }
+    // Vector newVeloc = b[myid].velocity() += accel * DT;
+    double new_vx = local_vx + accel_x * DT;
+    double new_vy = local_vy + accel_y * DT;
+    double new_vz = local_vz + accel_z * DT;
+    // Vector newPosit = b[myid].position() += newVeloc * DT;
+    double new_x = local_x + new_vx * DT;
+    double new_y = local_y + new_vy * DT;         
+    double new_z = local_z + new_vz * DT;
+    // b[myid].setPosition(newPosit);
+    *(local_bod_array+(k*7)+1) = new_x;
+    *(local_bod_array+(k*7)+2) = new_y;
+    *(local_bod_array+(k*7)+3) = new_z;
+    // b[myid].setVelocity(newVeloc);
+    *(local_bod_array+(k*7)+4) = new_vx;
+    *(local_bod_array+(k*7)+5) = new_vy;
+    *(local_bod_array+(k*7)+6) = new_vz;
   }
   //print coords for this timestep
   if(myid==0){
