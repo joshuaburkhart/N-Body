@@ -1,3 +1,12 @@
+#USAGE:
+#./nbody_plot.sh <data file>
+#
+#EXAMPLE:
+#./nbody_plot.sh test_job.o74748
+#
+#NOTES:
+#Use the .o file generated from the ACISS queuing system as the data file.
+
 R --no-save << EOT
 A = read.table("$1")
 par(pty="s")
