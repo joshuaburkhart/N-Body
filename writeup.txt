@@ -8,7 +8,9 @@ Project 3: N-Body Project
 ----------------------------------------------------------
 Write a short description of what you did for this project
 ----------------------------------------------------------
+For this project I used the starter code as a guide to write my own version of nbody that doesn't use objects. During execution, my program parses command line arguments (default values are used when no command line arguments are specified), pulls initial conditions in from a file, allocates memory so each thread can store a variable number of bodies, allocates memory so each thread can use buffers to share information, sets up a sending buffer, uses MPI_Allgather() to share information with all other threads, loops through bodies, modifying their values based on received information, and sets up a sending buffer again. This process is repeated for each time step. Process 0 does all the printing. The allocated memory is freed and the program exits.
 
+*Note: I use a script named q.sh (included in the project) to execute my program . Modify with your values and run the script to execute.
 
 --------------------------------------------------
 anything interesting or unusual about your program
@@ -67,9 +69,11 @@ drwxr-xr-x 14 jburkhar uoregon 4.0K Feb 12 09:53 ..
 how you tested each version of your program
 -------------------------------------------
 Sequential Version: nbody
+-I executed the sequential code using the ACISS queuing system, generating the file "CIS_555_N-Body.o74748"
 -I plotted the output file with R to make sure the orbits were circular
 
 Multithreaded Version: mpinbody_no
+-I executed the multithreaded code using the ACISS queuing system, generating the file "CIS_555_N-Body.o74747"
 -I used a diff tool (http://www.sourcegear.com/diffmerge/downloads.php) to compare the output file to that of nbody
 -I ran mpinbody_no with all supported* number of threads for the solar system data and confirmed matching output
 
@@ -78,7 +82,7 @@ Multithreaded Version: mpinbody_no
 ---------------------------------------------------------------------------------------
 include plots (or R or Matlab commands to generate plots so I can plot the data myself)
 ---------------------------------------------------------------------------------------
-Use the nbody_plot.sh script to view the output of this program.
+Use the nbody_plot.sh script (included in the project) to view the output of this program.
 
 *Note: Turn debug messages off in your PBS script before attempting to plot with R. If debug messages are on, or there is any non-table data in the output file, R will not be able to generate a frame from the output.
 
