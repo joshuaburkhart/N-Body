@@ -1,0 +1,86 @@
+Joshua Burkhart
+2/13/2012
+Dr. John Conery
+CIS 455/555
+
+Project 3: N-Body Project
+
+----------------------------------------------------------
+Write a short description of what you did for this project
+----------------------------------------------------------
+
+
+--------------------------------------------------
+anything interesting or unusual about your program
+--------------------------------------------------
+The program doesn't use objects, runs with multiple processes using the MPI_Allgather() function for synchronization and message passing, takes command line arguments for important values, parses an input file, and assigns a variable amount of bodies to each process. I named my program "mpinbody_no" for "No Objects".
+
+*Note: As initial conditions are read in from a file, I have created a solar_system.dat file that includes all the information needed to run the solar system model.
+
+The code was timed using the solar system data. See that the version that does not use objects, mpinbody_no, executes faster with a single thread than the starter code, nbody. Communication time between multiple threads slows the program down, as seen in the output below. With such a small dataset (10 bodies) it seems that the computation time / communication time ratio is too low to justify multi-threading.
+
+time mpirun -np 1 ./nbody
+...
+real	0m0.095s
+user	0m0.041s
+sys	0m0.035s
+
+time mpirun -np 1 ./mpinbody_no
+...
+real	0m0.068s
+user	0m0.017s
+sys	0m0.028s
+
+time mpirun -np 2 ./mpinbody_no
+...
+real	0m1.070s
+user	0m0.070s
+sys	0m0.055s
+
+time mpirun -np 5 ./mpinbody_no
+...
+real	0m1.079s
+user	0m0.182s
+sys	0m0.092s
+
+time mpirun -np 10 ./mpinbody_no
+...
+real	0m1.145s
+user	0m0.704s
+sys	0m0.172s
+
+The program I wrote can read and use the galaxy.dat file. Below we see the output file following an execution:
+
+[jburkhar@hn1 ~]$ ls -lathr ./queue_output/
+total 152M
+-rw-------  1 jburkhar uoregon    0 Feb 12 09:34 CIS_555_N-Body.e74728
+-rw-------  1 jburkhar uoregon 259M Feb 12 10:10 CIS_555_N-Body.o74728
+drwxr-xr-x  2 jburkhar uoregon 4.0K Feb 12 09:34 .
+-rw-r--r--  1 jburkhar uoregon  480 Feb 12 09:34 hostfile.tmp
+drwxr-xr-x 14 jburkhar uoregon 4.0K Feb 12 09:53 ..
+
+*Note the output file is 259M! The output (sample below) looks good, leading me to assume the program gives a valid result (I do not have a way to test the validity of this data).
+
+55 0.0539685 -1.28308 3.82661 -0.00581535 -2.73645 0.275746 0.0126874 -1.11229 1.1263 0.0508017 0.134909 0.0957436 -0.0535518 3.03533 1.91007 0.00267755 -0.641352 0.0367759 -0.0147331 0.0441962 0.234411 0.00267544 -0.906812 -1.049 0.00739255 -0.599173 1.31907 -0.126148 0.637319 0.159883 -0.0360278 2.54369 -0.640743 -0.0274541 0.377224 1.86945 0.0091895 -1.18701 0.748242 -0.0115082 0.32163 0.252021 -0.039264 -0.758662 -0.203474 0.00842952 2.11015 -0.534113 0.048707 0.368866 -1.46179 0.073198 -2.01816 0.147237 0.0215794 -0.0933593 -1.1266 0.00424557 -1.49791 1.92781 -0.00852361 -0.0881101 -0.135507 0.0246174 -0.347958 0.211209 0.0151427 2.84061 -0.338991 -0.0421738 
+
+-------------------------------------------
+how you tested each version of your program
+-------------------------------------------
+Sequential Version: nbody
+-I plotted the output file with R to make sure the orbits were circular
+
+Multithreaded Version: mpinbody_no
+-I used a diff tool (http://www.sourcegear.com/diffmerge/downloads.php) to compare the output file to that of nbody
+-I ran mpinbody_no with all supported* number of threads for the solar system data and confirmed matching output
+
+*Note: Example output files, CIS_555_N-Body.o74748 and CIS_555_N-Body.o74747, are included in this project.
+
+---------------------------------------------------------------------------------------
+include plots (or R or Matlab commands to generate plots so I can plot the data myself)
+---------------------------------------------------------------------------------------
+Use the nbody_plot.sh script to view the output of this program.
+
+*Note: Turn debug messages off in your PBS script before attempting to plot with R. If debug messages are on, or there is any non-table data in the output file, R will not be able to generate a frame from the output.
+
+
+*When executing mpinbody_no, the number of bodies must be divisible by the number of processes specified. This allows for equal distribution of work and does not pose too much of a constraint on the user. For instance, using my program, the solar system problem may be calculated by 1, 2, 5, or 10 processes.
